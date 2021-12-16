@@ -2,6 +2,9 @@
 
 Sample react-native app using [Omnichannel Chat SDK](https://github.com/microsoft/omnichannel-chat-sdk) with [Omnichannel Voice Video Calling React Native](https://github.com/microsoft/omnichannel-voice-video-calling-react-native)
 
+## Prerequisites
+- [React Native](https://reactnative.dev/)
+
 ## Getting Started
 
 ### 1. Configure a chat widget

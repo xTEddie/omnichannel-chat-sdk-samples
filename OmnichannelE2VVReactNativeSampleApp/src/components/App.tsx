@@ -34,7 +34,7 @@ export default function App() {
 
       const chatSDK = new OmnichannelChatSDK(omnichannelConfig);
       await chatSDK.initialize();
-      const voiceVideoCallingSDK = createVoiceVideoCalling(omnichannelConfig, {disable: false});
+      const voiceVideoCallingSDK = createVoiceVideoCalling(omnichannelConfig, {disable: true});
       setVoiceVideoCallingSDK(voiceVideoCallingSDK);
 
       setChatSDK(chatSDK);
