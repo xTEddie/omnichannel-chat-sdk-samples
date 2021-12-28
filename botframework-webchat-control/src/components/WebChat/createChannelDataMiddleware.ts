@@ -8,6 +8,8 @@ enum DeliveryMode {
 }
 
 class ChannelDataMiddleware implements IWebChatMiddleware {
+    public constructor (private omnichannelConfig: any) {}
+
     public applicable(action: any): boolean {
         return action.type === DIRECT_LINE_POST_ACTIVITY_PENDING
         && action.payload
@@ -34,7 +36,8 @@ class ChannelDataMiddleware implements IWebChatMiddleware {
         }
 
         nextAction.payload.activity.channelData.metadata = {
-            deliveryMode: DeliveryMode.Bridged
+            deliveryMode: DeliveryMode.Bridged,
+            widgetId: this.omnichannelConfig.widgetId
         };
 
         return {
@@ -44,9 +47,9 @@ class ChannelDataMiddleware implements IWebChatMiddleware {
     }
 }
 
-const createChannelDataMiddleware = () => {
+const createChannelDataMiddleware = (omnichannelConfig: any) => {
     console.log('[createChannelDataMiddleware]');
-    return new ChannelDataMiddleware();
+    return new ChannelDataMiddleware(omnichannelConfig);
 };
 
 export default createChannelDataMiddleware;
