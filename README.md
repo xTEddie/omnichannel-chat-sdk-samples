@@ -11,6 +11,7 @@ All sample apps are not production ready code and are used for reference only.
 | [Gifted Chat React Native Control](GiftedChatReactNativeControl/) | Demonstrates how to use Chat SDK with [Gifted Chat React Native](https://github.com/FaridSafi/react-native-gifted-chat) Control |
 | [BotFramework-WebChat Control](botframework-webchat-control/) | Demonstrates how to use Chat SDK with [BotFramework-WebChat](https://github.com/microsoft/BotFramework-WebChat) Control |
 | [React Chat Widget Control](react-chat-widget-control/) | Demonstrates how to use Chat SDK with [React Chat Widget Control](https://github.com/Wolox/react-chat-widget) Control |
+| [Omnichannel Voice Video React Native Sample App](OmnichannelE2VVReactNativeSampleApp/) | Demonstrates how to use Chat SDK with [Omnichannel Voice Video React Native SDK](https://www.npmjs.com/package/@microsoft/omnichannel-voice-video-calling-react-native) |
 
 ## Contributing
 
