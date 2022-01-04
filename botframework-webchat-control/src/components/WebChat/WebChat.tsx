@@ -45,7 +45,7 @@ console.log(debugConfig);
 const avatarMiddleware: any = createAvatarMiddleware();
 const activityMiddleware: any = createActivityMiddleware();
 const activityStatusMiddleware: any = createActivityStatusMiddleware();
-const channelDataMiddleware: any = createChannelDataMiddleware();
+const channelDataMiddleware: any = createChannelDataMiddleware(omnichannelConfig);
 const attachmentMiddleware: any = createAttachmentMiddleware();
 
 const defaultStyleOptions = {
