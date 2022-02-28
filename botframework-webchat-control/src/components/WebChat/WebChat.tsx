@@ -22,6 +22,7 @@ import fetchOmnichannelConfig from '../../utils/fetchOmnichannelConfig';
 import fetchTelemetryConfig from '../../utils/fetchTelemetryConfig';
 import fetchCallingConfig from '../../utils/fetchCallingConfig';
 import fetchDebugConfig from '../../utils/fetchDebugConfig';
+import fetchChatReconnectConfig from '../../utils/fetchChatReconnectConfig';
 import transformLiveChatConfig, { ConfigurationManager } from '../../utils/transformLiveChatConfig';
 import './WebChat.css';
 
@@ -29,6 +30,7 @@ const omnichannelConfig: any = fetchOmnichannelConfig();
 const telemetryConfig: any = fetchTelemetryConfig();
 const callingConfig: any = fetchCallingConfig();
 const debugConfig: any = fetchDebugConfig();
+const chatReconnectConfig: any = fetchChatReconnectConfig();
 
 console.log(`%c [OmnichannelConfig]`, 'background-color:#001433;color:#fff');
 console.log(omnichannelConfig);
@@ -78,9 +80,14 @@ function WebChat() {
 
   useEffect(() => {
     const init = async () => {
-      const chatSDK = new OmnichannelChatSDK(omnichannelConfig, {
-        ...telemetryConfig
-      });
+      const chatSDKConfig = {
+        ...telemetryConfig,
+        chatReconnect: {
+          disable: false
+        }
+      };
+
+      const chatSDK = new OmnichannelChatSDK(omnichannelConfig, chatSDKConfig);
 
       chatSDK.setDebug(!debugConfig.disable);
 
@@ -169,8 +176,24 @@ function WebChat() {
 
     dispatch({type: ActionType.SET_CHAT_STARTED, payload: true});
 
+    if (ConfigurationManager.isChatReconnect && chatReconnectConfig.reconnectId) {
+      // Validate reconnect id if any
+      const chatReconnectContext = await chatSDK?.getChatReconnectContext({
+        reconnectId: chatReconnectConfig.reconnectId
+      });
+
+      // Redirect URL if any
+      if (chatReconnectContext?.redirectURL) {
+        window.location.replace(chatReconnectContext?.redirectURL);
+      }
+
+      if (chatReconnectContext?.reconnectId) {
+        optionalParams.reconnectId = chatReconnectContext?.reconnectId;
+      }
+    }
+
     // Start chats only if there's an existing live chat context or no PreChat
-    if (liveChatContext || !preChatSurvey) {
+    if (liveChatContext || !preChatSurvey || chatReconnectConfig.reconnectId) {
       dispatch({type: ActionType.SET_LOADING, payload: true});
 
       try {
