@@ -26,6 +26,7 @@ The sample app includes the following scenarios:
 - [X] Avatar middleware
 - [X] Activity status middleware
 - [X] Escalation to Voice & Video
+- [X] Unauthenticated Chat Reconnect
 
 ## Prerequisites
 - [React](https://reactjs.org/)
