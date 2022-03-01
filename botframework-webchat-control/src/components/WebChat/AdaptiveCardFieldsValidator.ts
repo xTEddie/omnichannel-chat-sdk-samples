@@ -48,7 +48,9 @@ class AdaptiveCardFieldsValidator {
         (element as any).validators = [];
 
         if (source.type === 'Input.Text') {
-            (element as any).validators.push(new RequiredFieldValidator());
+            const id = JSON.parse(source.id);
+            const {IsRequired: isRequired} = id;
+            isRequired && (element as any).validators.push(new RequiredFieldValidator());
         }
     }
 
