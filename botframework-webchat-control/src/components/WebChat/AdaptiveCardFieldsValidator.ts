@@ -25,6 +25,27 @@ class RequiredFieldValidator {
     }
 }
 
+class RequiredBooleanFieldValidator {
+    /**
+     * Validates input.
+     *
+     * @param value Value
+     * @param errors List of errors
+     * @returns Whether input value is valid or not
+     */
+    public validate(value: string, errors: string[]): boolean {
+        debug && console.log(`[validate]`);
+        // console.log(value);
+        const isValid = !!value && value.toLowerCase() === "true";
+        console.log(isValid);
+        if (!isValid) {
+            errors.push('A required field cannot be empty');
+        }
+
+        return isValid;
+    }
+}
+
 class AdaptiveCardFieldsValidator {
 
     /**
@@ -47,8 +68,12 @@ class AdaptiveCardFieldsValidator {
         // Custom validators
         (element as any).validators = [];
 
-        if (source.type === 'Input.Text') {
-            (element as any).validators.push(new RequiredFieldValidator());
+        const id = JSON.parse(source.id);
+        const {IsRequired: isRequired} = id;
+        isRequired && (element as any).validators.push(new RequiredFieldValidator());
+
+        if (source.type === 'Input.Toggle') {
+            isRequired && (element as any).validators.push(new RequiredBooleanFieldValidator());
         }
     }
 
@@ -60,7 +85,8 @@ class AdaptiveCardFieldsValidator {
      */
     public canSubmitSurvey(inputs: Input[]): boolean {
         debug && console.log('[onSubmit]');
-        const valid = inputs.every((input: Input) => this.validateInput(input));
+        const results = inputs.map((input: Input) => this.validateInput(input));
+        const valid = results.every((result: boolean) => result);
         return valid;
     }
 
