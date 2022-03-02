@@ -85,7 +85,8 @@ class AdaptiveCardFieldsValidator {
      */
     public canSubmitSurvey(inputs: Input[]): boolean {
         debug && console.log('[onSubmit]');
-        const valid = inputs.every((input: Input) => this.validateInput(input));
+        const results = inputs.map((input: Input) => this.validateInput(input));
+        const valid = results.every((result: boolean) => result);
         return valid;
     }
 
