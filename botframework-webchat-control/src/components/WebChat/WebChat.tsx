@@ -230,7 +230,7 @@ function WebChat() {
   const endChat = useCallback(async () => {
     console.log('[endChat]');
     await chatSDK?.endChat();
-    chatAdapter.end();
+    chatAdapter.end && chatAdapter.end();
 
     // Clean up
     (VoiceVideoCallingSDK as any)?.close();
