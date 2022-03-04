@@ -230,6 +230,7 @@ function WebChat() {
   const endChat = useCallback(async () => {
     console.log('[endChat]');
     await chatSDK?.endChat();
+    chatAdapter.end();
 
     // Clean up
     (VoiceVideoCallingSDK as any)?.close();
@@ -241,7 +242,7 @@ function WebChat() {
     setShouldHideSendBox(false);
     localStorage.removeItem('liveChatContext');
     dispatch({type: ActionType.SET_CHAT_STARTED, payload: false});
-  }, [chatSDK, dispatch, VoiceVideoCallingSDK]);
+  }, [chatSDK, chatAdapter, dispatch, VoiceVideoCallingSDK]);
 
   const downloadTranscript = useCallback(async () => {
     console.log('[downloadTranscript]');
@@ -253,8 +254,7 @@ function WebChat() {
     console.log('[emailTranscript]');
     const transcriptBody: any = {
       emailAddress: process.env.REACT_APP_email as string,
-      attachmentMessage: 'Transcript',
-      locale: 'en'
+      attachmentMessage: 'Transcript'
     }
     await chatSDK?.emailLiveChatTranscript(transcriptBody);
   }, [chatSDK]);
