@@ -47,6 +47,7 @@ const adjustWebChatHeightNoCall = () => {
 }
 
 function Calling(props: CallingProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const [incomingCall, setIncomingCall] = useState(false);
   const [inVideoCall, setInVideoCall] = useState(false);
   const [inVoiceCall, setInVoiceCall] = useState(false);
@@ -58,6 +59,14 @@ function Calling(props: CallingProps) {
     const init = async () => {
       const {VoiceVideoCallingSDK, OCClient, chatToken} = props;
 
+      if (!VoiceVideoCallingSDK || !chatToken || !OCClient) {
+        return;
+      }
+
+      if (isInitialized) {
+        return;
+      }
+
       try {
         await VoiceVideoCallingSDK.initialize({
           chatToken,
@@ -66,6 +75,8 @@ function Calling(props: CallingProps) {
           environment: 'test',
           OCClient: OCClient
         });
+
+        setIsInitialized(true);
         console.log("[WebChat][Calling] VoiceVideoCallingProxy initialized!");
         console.log(VoiceVideoCallingSDK);
       } catch (e) {
@@ -186,7 +197,7 @@ function Calling(props: CallingProps) {
     }
 
     init();
-  }, [props]);
+  }, [props, isInitialized]);
 
   const acceptVoiceCall = useCallback(async () => {
     console.log(`[WebChat][Calling][Accept][Voice]`);
