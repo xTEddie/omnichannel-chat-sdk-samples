@@ -10,6 +10,16 @@ enum MimeTypes {
     UnknownFileType = "application/octet-stream"
 }
 
+const supportedAdaptiveCardContentTypes = [
+    "application/vnd.microsoft.card.adaptive",
+    "application/vnd.microsoft.card.audio",
+    "application/vnd.microsoft.card.hero",
+    "application/vnd.microsoft.card.receipt",
+    "application/vnd.microsoft.card.thumbnail",
+    "application/vnd.microsoft.card.signin",
+    "application/vnd.microsoft.card.oauth",
+];
+
 /**
  * Patch card with different attachment data.
  * @param card
@@ -46,6 +56,25 @@ const createAttachmentMiddleware = () => {
 
         // No attachment
         if (!attachments || !attachments.length || !attachment) {
+            return next(card);
+        }
+
+        // Adaptive Cards
+        let { content, contentType } = attachment || { content: "", contentType: "" };
+        let { type } = content || { type: "" };
+
+        // LiveChatVersion 2
+        if (!type && content && supportedAdaptiveCardContentTypes.includes(contentType)) {
+            try {
+                content = JSON.parse(content);
+                type = content.type;
+                card.attachment.content = content;
+            } catch (e) {
+
+            }
+        }
+
+        if (type === 'AdaptiveCard' || supportedAdaptiveCardContentTypes.includes(contentType)) {
             return next(card);
         }
 
