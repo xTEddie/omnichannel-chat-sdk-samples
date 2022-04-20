@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@microsoft/omnichannel-chat-sdk": "^1.1.1-main.4abcbae",
+    "@microsoft/omnichannel-chat-widget": "0.1.0-main.7a3ed6a",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.1.1",
     "@testing-library/user-event": "^13.5.0",
