@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { OmnichannelChatSDK } from "@microsoft/omnichannel-chat-sdk";
-import {LiveChatWidget} from "@microsoft/omnichannel-chat-widget";
+import { LiveChatWidget } from "@microsoft/omnichannel-chat-widget";
 import './App.css';
 
 const fetchOmnichannelChatConfig = () => {
@@ -25,6 +25,14 @@ function App() {
       const chatConfig = await chatSDK.getLiveChatConfig();
 
       const liveChatWidgetProps = {
+        styleProps: {
+          generalStyles: {
+              width: "400px",
+              height: "600px",
+              bottom: "30px",
+              right: "30px"
+          }
+        },
         chatSDK,
         chatConfig
       };
@@ -38,7 +46,7 @@ function App() {
   return (
     <div className="App">
       <div>
-        <LiveChatWidget {...liveChatWidgetProps} />
+        {liveChatWidgetProps && <LiveChatWidget {...liveChatWidgetProps} />}
       </div>
     </div>
   );
