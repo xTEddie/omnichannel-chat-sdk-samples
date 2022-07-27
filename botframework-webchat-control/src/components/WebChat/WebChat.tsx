@@ -25,12 +25,15 @@ import fetchDebugConfig from '../../utils/fetchDebugConfig';
 import fetchChatReconnectConfig from '../../utils/fetchChatReconnectConfig';
 import transformLiveChatConfig, { ConfigurationManager } from '../../utils/transformLiveChatConfig';
 import './WebChat.css';
+import shareObservable from './shareObservable';
+// import {getLocalTelemetryCollector} from "@microsoft/omnichannel-chat-sdk";
 
 const omnichannelConfig: any = fetchOmnichannelConfig();
 const telemetryConfig: any = fetchTelemetryConfig();
 const callingConfig: any = fetchCallingConfig();
 const debugConfig: any = fetchDebugConfig();
 const chatReconnectConfig: any = fetchChatReconnectConfig();
+
 
 console.log(`%c [OmnichannelConfig]`, 'background-color:#001433;color:#fff');
 console.log(omnichannelConfig);
@@ -124,8 +127,11 @@ function WebChat() {
       }
     }
 
-    console.log(state);
+    // console.log(state);
     init();
+
+    // const localTelemetry = getLocalTelemetryCollector();
+    // (window as any).localTelemetry = localTelemetry;
   }, []);
 
   const styleOptions = useMemo(() => ({
@@ -216,6 +222,41 @@ function WebChat() {
       chatSDK?.onAgentEndSession(onAgentEndSession);
 
       const chatAdapter = await chatSDK?.createChatAdapter();
+      const defaultObservable = (chatAdapter as any).activity$;
+      (chatAdapter as any).activity$ = shareObservable(
+        new (window as any).Observable((observer: any) => {
+          defaultObservable.subscribe({
+            complete() {
+              observer.complete();
+            },
+            error(err: any) {
+              observer.error(err);
+            },
+            async next(activity: any) {
+              console.log("NEXT")
+              console.log(activity);
+              if (typeof activity.text === 'string') {
+                return observer.next({
+                  ...activity,
+                  // text: activity.text.toUpperCase()
+                })
+              }
+
+              if (activity.attachments) {
+                const attachment = activity.attachments[0];
+                if (attachment.contentType === 'application/vnd.microsoft.card.oauth') {
+                  observer.next(false);
+                  // await fetch("https://httpstat.us/200");
+                  setTimeout(() => {
+                    observer.next({...activity});
+                  }, 10000);
+                  // observer.next({...activity});
+                }
+              }
+            }
+          });
+        })
+      )
 
       setChatAdapter(chatAdapter);
       dispatch({type: ActionType.SET_LOADING, payload: false});
@@ -230,7 +271,7 @@ function WebChat() {
   const endChat = useCallback(async () => {
     console.log('[endChat]');
     await chatSDK?.endChat();
-    chatAdapter.end && chatAdapter.end();
+    chatAdapter?.end && chatAdapter?.end();
 
     // Clean up
     (VoiceVideoCallingSDK as any)?.close();
@@ -328,6 +369,13 @@ function WebChat() {
 
   return (
     <>
+      {/* <div>
+        <button onClick={useCallback(() => {
+          const payload = !state.hideMidAuthSigninCard;
+          console.log(state);
+          dispatch({type: ActionType.SET_MID_AUTH_SIGNIN_CARD, payload});
+        }, [state.hideMidAuthSigninCard, dispatch])}> Toggle Card</button>
+      </div> */}
       <div>
         {
           !state.hasChatStarted && <ChatButton onClick={startChat} />
