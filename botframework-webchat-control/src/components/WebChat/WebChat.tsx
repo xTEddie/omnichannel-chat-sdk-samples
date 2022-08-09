@@ -222,39 +222,65 @@ function WebChat() {
       chatSDK?.onAgentEndSession(onAgentEndSession);
 
       const chatAdapter = await chatSDK?.createChatAdapter();
-      const defaultObservable = (chatAdapter as any).activity$;
+      class CapitalizeTextSubscriber {
+        public applicable(activity: any) {
+          return typeof activity.text === 'string';
+        }
+
+        public apply(observer: any, activity: any) {
+          observer.next({
+            ...activity,
+            text: activity.text.toUpperCase()
+          });
+        }
+      }
+
+      class BotAuthSubscriber {
+        public applicable(activity: any) {
+          return activity.attachments?.length && activity.attachments[0] && activity.attachments[0].contentType === 'application/vnd.microsoft.card.oauth';
+        }
+
+        public async apply(observer: any, activity: any): Promise<void> {
+          observer.next(false);
+          console.log("[HIDE]");
+          // // await fetch("https://httpstat.us/200");
+          setTimeout(() => {
+            console.log("[SHOW]");
+            observer.next({...activity});
+          }, 15000);
+        }
+      }
+
+      const subscribers = [new BotAuthSubscriber()];
       (chatAdapter as any).activity$ = shareObservable(
         new (window as any).Observable((observer: any) => {
-          defaultObservable.subscribe({
-            complete() {
-              observer.complete();
-            },
-            error(err: any) {
-              observer.error(err);
-            },
-            async next(activity: any) {
-              console.log("NEXT")
-              console.log(activity);
-              if (typeof activity.text === 'string') {
-                return observer.next({
-                  ...activity,
-                  // text: activity.text.toUpperCase()
-                })
-              }
+          const abortController = new (window as any).AbortController();
 
-              if (activity.attachments) {
-                const attachment = activity.attachments[0];
-                if (attachment.contentType === 'application/vnd.microsoft.card.oauth') {
-                  observer.next(false);
-                  // await fetch("https://httpstat.us/200");
-                  setTimeout(() => {
-                    observer.next({...activity});
-                  }, 10000);
-                  // observer.next({...activity});
+          (async () => {
+            try {
+              for await (const activity of (chatAdapter as any).activities()) {
+                let hasSubscriberCalledOnce = false;
+                for (const subscriber of subscribers) {
+                  if (subscriber.applicable(activity)) {
+                    await subscriber.apply(observer, activity);
+                    hasSubscriberCalledOnce = true;
+                  }
+                }
+
+                if (!hasSubscriberCalledOnce) {
+                  observer.next(activity);
                 }
               }
+
+              observer.complete();
+            } catch (error) {
+              observer.error(error);
             }
-          });
+          })();
+
+          return () => {
+            abortController.abort();
+          }
         })
       )
 
