@@ -25,8 +25,7 @@ import fetchDebugConfig from '../../utils/fetchDebugConfig';
 import fetchChatReconnectConfig from '../../utils/fetchChatReconnectConfig';
 import transformLiveChatConfig, { ConfigurationManager } from '../../utils/transformLiveChatConfig';
 import './WebChat.css';
-import shareObservable from './shareObservable';
-// import {getLocalTelemetryCollector} from "@microsoft/omnichannel-chat-sdk";
+import createShimAdapter from './createShimAdapter';
 
 const omnichannelConfig: any = fetchOmnichannelConfig();
 const telemetryConfig: any = fetchTelemetryConfig();
@@ -91,6 +90,7 @@ function WebChat() {
       };
 
       const chatSDK = new OmnichannelChatSDK(omnichannelConfig, chatSDKConfig);
+      (window as any).chatSDK = chatSDK;
 
       chatSDK.setDebug(!debugConfig.disable);
 
@@ -201,7 +201,6 @@ function WebChat() {
     // Start chats only if there's an existing live chat context or no PreChat
     if (liveChatContext || !preChatSurvey || chatReconnectConfig.reconnectId) {
       dispatch({type: ActionType.SET_LOADING, payload: true});
-
       try {
         await chatSDK?.startChat(optionalParams);
       } catch (error: any) {
@@ -221,68 +220,8 @@ function WebChat() {
       chatSDK?.onTypingEvent(onTypingEvent);
       chatSDK?.onAgentEndSession(onAgentEndSession);
 
-      const chatAdapter = await chatSDK?.createChatAdapter();
-      class CapitalizeTextSubscriber {
-        public applicable(activity: any) {
-          return typeof activity.text === 'string';
-        }
-
-        public apply(observer: any, activity: any) {
-          observer.next({
-            ...activity,
-            text: activity.text.toUpperCase()
-          });
-        }
-      }
-
-      class BotAuthSubscriber {
-        public applicable(activity: any) {
-          return activity.attachments?.length && activity.attachments[0] && activity.attachments[0].contentType === 'application/vnd.microsoft.card.oauth';
-        }
-
-        public async apply(observer: any, activity: any): Promise<void> {
-          observer.next(false);
-          console.log("[HIDE]");
-          // // await fetch("https://httpstat.us/200");
-          setTimeout(() => {
-            console.log("[SHOW]");
-            observer.next({...activity});
-          }, 15000);
-        }
-      }
-
-      const subscribers = [new BotAuthSubscriber()];
-      (chatAdapter as any).activity$ = shareObservable(
-        new (window as any).Observable((observer: any) => {
-          const abortController = new (window as any).AbortController();
-
-          (async () => {
-            try {
-              for await (const activity of (chatAdapter as any).activities()) {
-                let hasSubscriberCalledOnce = false;
-                for (const subscriber of subscribers) {
-                  if (subscriber.applicable(activity)) {
-                    await subscriber.apply(observer, activity);
-                    hasSubscriberCalledOnce = true;
-                  }
-                }
-
-                if (!hasSubscriberCalledOnce) {
-                  observer.next(activity);
-                }
-              }
-
-              observer.complete();
-            } catch (error) {
-              observer.error(error);
-            }
-          })();
-
-          return () => {
-            abortController.abort();
-          }
-        })
-      )
+      let chatAdapter: any = await chatSDK?.createChatAdapter();
+      chatAdapter = createShimAdapter(chatAdapter);
 
       setChatAdapter(chatAdapter);
       dispatch({type: ActionType.SET_LOADING, payload: false});
@@ -395,13 +334,6 @@ function WebChat() {
 
   return (
     <>
-      {/* <div>
-        <button onClick={useCallback(() => {
-          const payload = !state.hideMidAuthSigninCard;
-          console.log(state);
-          dispatch({type: ActionType.SET_MID_AUTH_SIGNIN_CARD, payload});
-        }, [state.hideMidAuthSigninCard, dispatch])}> Toggle Card</button>
-      </div> */}
       <div>
         {
           !state.hasChatStarted && <ChatButton onClick={startChat} />
