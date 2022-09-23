@@ -69,7 +69,10 @@ const patchAdaptiveCard = (adaptiveCard: any) => {
 
 interface WebChatProps {
   left?: Boolean
+  liveChatContextKey?: String
 }
+
+const defaultLiveChatContextKey = 'liveChatContext';
 
 function WebChat(props: WebChatProps) {
   const {state, dispatch} = useContext(Store);
@@ -104,9 +107,9 @@ function WebChat(props: WebChatProps) {
       const liveChatConfig = await chatSDK.getLiveChatConfig();
       transformLiveChatConfig(liveChatConfig);
 
-      const liveChatContext = localStorage.getItem('liveChatContext');
+      const liveChatContext = localStorage.getItem(props.liveChatContextKey as string || defaultLiveChatContextKey);
       if (liveChatContext && Object.keys(JSON.parse(liveChatContext)).length > 0) {
-        console.log("[liveChatContext]");
+        console.log(`[liveChatContext] ${props.liveChatContextKey || defaultLiveChatContextKey}`);
         console.log(liveChatContext);
         setLiveChatContext(liveChatContext);
       }
@@ -215,9 +218,9 @@ function WebChat(props: WebChatProps) {
       // Cache current conversation context
       const newliveChatContext = await chatSDK?.getCurrentLiveChatContext();
       if (newliveChatContext && Object.keys(newliveChatContext).length) {
-        console.log('[newliveChatContext]')
+        console.log(`[newliveChatContext] ${props.liveChatContextKey || defaultLiveChatContextKey}`);
         console.log(newliveChatContext);
-        localStorage.setItem('liveChatContext', JSON.stringify(newliveChatContext));
+        localStorage.setItem(props.liveChatContextKey as string || defaultLiveChatContextKey, JSON.stringify(newliveChatContext));
       }
 
       chatSDK?.onNewMessage(onNewMessage, {rehydrate: true});
@@ -250,7 +253,7 @@ function WebChat(props: WebChatProps) {
     setPreChatSurvey(undefined);
     setPreChatResponse(undefined);
     setShouldHideSendBox(false);
-    localStorage.removeItem('liveChatContext');
+    localStorage.removeItem(props.liveChatContextKey as string || defaultLiveChatContextKey);
     dispatch({type: ActionType.SET_CHAT_STARTED, payload: false});
   }, [chatSDK, chatAdapter, dispatch, VoiceVideoCallingSDK]);
 
