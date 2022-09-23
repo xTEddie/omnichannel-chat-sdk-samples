@@ -67,7 +67,11 @@ const patchAdaptiveCard = (adaptiveCard: any) => {
   return JSON.parse(adaptiveCard.replaceAll("&#42;", "*"));  // HTML entities '&#42;' is not unescaped for some reason
 }
 
-function WebChat(props: any) {
+interface WebChatProps {
+  left?: Boolean
+}
+
+function WebChat(props: WebChatProps) {
   const {state, dispatch} = useContext(Store);
   const [chatSDK, setChatSDK] = useState<OmnichannelChatSDK>();
   const [liveChatContext, setLiveChatContext] = useState<any>(undefined);
