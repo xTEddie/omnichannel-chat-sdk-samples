@@ -7,9 +7,14 @@ import { StateProvider } from './context';
 
 ReactDOM.render(
   <React.StrictMode>
-    <StateProvider>
-      <LiveChatWidget/>
-    </StateProvider>
+    <>
+      <StateProvider>
+        <LiveChatWidget liveChatContextKey='one'/>
+      </StateProvider>
+      <StateProvider>
+        <LiveChatWidget liveChatContextKey='two' left/>
+      </StateProvider>
+    </>
   </React.StrictMode>,
   document.getElementById('root')
 );
