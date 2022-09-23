@@ -1,14 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import WebChat from './components/WebChat/WebChat';
+import LiveChatWidget from './components/LiveChatWidget/LiveChatWidget';
 import reportWebVitals from './reportWebVitals';
 import { StateProvider } from './context';
 
 ReactDOM.render(
   <React.StrictMode>
     <StateProvider>
-      <WebChat />
+      <LiveChatWidget/>
     </StateProvider>
   </React.StrictMode>,
   document.getElementById('root')
