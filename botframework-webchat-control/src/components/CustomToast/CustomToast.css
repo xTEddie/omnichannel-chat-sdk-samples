@@ -1,0 +1,91 @@
+.oclcw-webchat__toast--error {
+    background-color: #FDE7E9;
+    color: #A80000;
+    fill: #A80000;
+}
+
+.oclcw-webchat__toast--error:only-child {
+    background-color: transparent;
+}
+
+.oclcw-webchat__toast--warn {
+    background-color: #FFF4CE;
+    color: #3B3A39;
+    fill: #3B3A39;
+}
+
+.oclcw-webchat__toast--warn:only-child {
+    background-color: transparent;
+}
+
+.oclcw-webchat__toast--info {
+    background-color: #CEF1FF;
+    color: #105E7D;
+    fill: #105E7D;
+}
+
+.oclcw-webchat__toast--info:only-child {
+    background-color: transparent;
+}
+
+.oclcw-webchat__toast--success {
+    background-color: #DFF6DD;
+    color: #107C10;
+    fill: #107C10;
+}
+
+.oclcw-webchat__toast--success:only-child {
+    background-color: transparent;
+}
+
+.oclcw_webchat__toast__textBox {
+    display: flex;
+}
+
+.oclcw_webchat__toast__iconBox {
+    display: flex;
+    height: 32px;
+    width: 77px;
+    justify-content: center;
+    align-items: center;
+}
+
+.oclcw_webchat__toast__text {
+    font-family: 'Calibri', 'Helvetica Neue', 'Arial', 'sans-serif';
+    font-size: 87.5%;
+    min-height: 32px;
+    padding: 6px 0;
+}
+
+.oclcw_webchat__toast__dismissButton {
+    width: 26px;
+    height: 26px;
+    border-radius: 3px;
+    border: 0;
+    margin: 4px;
+    background-color: transparent;
+}
+
+.oclcw_webchat__toast__dismissButton:hover {
+    background-color: #E0E0E0;
+}
+
+.oclcw_webchat__toast__dismissButtonFocus {
+    display: flex;
+}
+
+.oclcw_webchat__toast__actionBar {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.oclcw_webchat__toast__refreshButton {
+    background-color: white;
+    border-radius: 3px;
+    border: 1.6px solid black;
+    margin: 0 4px 4px 0;
+}
+
+.oclcw_webchat__toast__refreshButton:hover {
+    background-color: #E0E0E0;
+}

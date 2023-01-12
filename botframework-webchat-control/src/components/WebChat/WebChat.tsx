@@ -25,14 +25,14 @@ import fetchDebugConfig from '../../utils/fetchDebugConfig';
 import fetchChatReconnectConfig from '../../utils/fetchChatReconnectConfig';
 import transformLiveChatConfig, { ConfigurationManager } from '../../utils/transformLiveChatConfig';
 import './WebChat.css';
-import createShimAdapter from './createShimAdapter';
+import * as DirectChat from './directChat';
+import createToastMiddleware from './createToastMiddleware';
 
 const omnichannelConfig: any = fetchOmnichannelConfig();
 const telemetryConfig: any = fetchTelemetryConfig();
 const callingConfig: any = fetchCallingConfig();
 const debugConfig: any = fetchDebugConfig();
 const chatReconnectConfig: any = fetchChatReconnectConfig();
-
 
 console.log(`%c [OmnichannelConfig]`, 'background-color:#001433;color:#fff');
 console.log(omnichannelConfig);
@@ -51,6 +51,7 @@ const activityMiddleware: any = createActivityMiddleware();
 const activityStatusMiddleware: any = createActivityStatusMiddleware();
 const channelDataMiddleware: any = createChannelDataMiddleware(omnichannelConfig);
 const attachmentMiddleware: any = createAttachmentMiddleware();
+const toastMiddleware: any = createToastMiddleware();
 
 const defaultStyleOptions = {
   bubbleBorderRadius: 10,
@@ -74,6 +75,15 @@ interface WebChatProps {
 
 const defaultLiveChatContextKey = 'liveChatContext';
 
+const chatAdapterConfig = {
+  // protocol: 'DirectLine',
+  // DirectLine: {
+  //   options: {
+  //     token: "",
+  //   }
+  // }
+}
+
 function WebChat(props: WebChatProps) {
   const {state, dispatch} = useContext(Store);
   const [chatSDK, setChatSDK] = useState<OmnichannelChatSDK>();
@@ -86,6 +96,7 @@ function WebChat(props: WebChatProps) {
   const [VoiceVideoCallingSDK, setVoiceVideoCallingSDK] = useState(undefined);
   const [typingIndicatorMiddleware, setTypingIndicatorMiddleware] = useState(undefined);
   const [shouldHideSendBox, setShouldHideSendBox] = useState(false);
+  const [styleOptionsOverrides, setStyleOptionsOverrides] = useState({});
 
   useEffect(() => {
     const init = async () => {
@@ -103,6 +114,8 @@ function WebChat(props: WebChatProps) {
 
       await chatSDK.initialize();
       setChatSDK(chatSDK);
+
+      DirectChat.shimChatSDK(chatSDK);
 
       const liveChatConfig = await chatSDK.getLiveChatConfig();
       transformLiveChatConfig(liveChatConfig);
@@ -134,18 +147,26 @@ function WebChat(props: WebChatProps) {
       }
     }
 
-    // console.log(state);
     init();
 
-    // const localTelemetry = getLocalTelemetryCollector();
-    // (window as any).localTelemetry = localTelemetry;
   }, []);
 
   const styleOptions = useMemo(() => ({
     ...defaultStyleOptions,
     hideUploadButton: !ConfigurationManager.canUploadAttachment,
-    hideSendBox: shouldHideSendBox
-  }), [ConfigurationManager.canUploadAttachment, shouldHideSendBox]);
+    hideSendBox: shouldHideSendBox,
+    ...styleOptionsOverrides
+  }), [shouldHideSendBox, styleOptionsOverrides]);
+
+  // DirectChat.setHideSendBox(() => {
+  //   const overrides = {
+  //     ...styleOptionsOverrides,
+  //     hideSendBox: true,
+  //     toasterSingularMaxHeight: 100
+  //   };
+
+  //   setStyleOptionsOverrides(overrides);
+  // });
 
   const onNewMessage = useCallback((message: IRawMessage) => {
     console.log(`[onNewMessage] ${message.content}`);
@@ -176,10 +197,13 @@ function WebChat(props: WebChatProps) {
 
     const dataMaskingRules = await chatSDK?.getDataMaskingRules();
     const store = createCustomStore();
-    setWebChatStore(store.create());
+    const webChatStore = store.create();
+    setWebChatStore(webChatStore);
 
-    store.subscribe('DataMasking', createDataMaskingMiddleware(dataMaskingRules));
-    store.subscribe('ChannelData', channelDataMiddleware);
+    DirectChat.WebChatStates.store = webChatStore;
+
+    // store.subscribe('DataMasking', createDataMaskingMiddleware(dataMaskingRules));
+    // store.subscribe('ChannelData', channelDataMiddleware);
 
     // Check for active conversation in cache
     if (liveChatContext && Object.keys(JSON.parse(liveChatContext)).length > 0) {
@@ -188,6 +212,12 @@ function WebChat(props: WebChatProps) {
     }
 
     dispatch({type: ActionType.SET_CHAT_STARTED, payload: true});
+
+    // if (ConfigurationManager.isChatReconnect) {
+    //   const chatReconnectContext = await chatSDK?.getChatReconnectContext();
+    //   console.log(chatReconnectContext);
+    //   optionalParams.reconnectId = chatReconnectContext?.reconnectId;
+    // }
 
     if (ConfigurationManager.isChatReconnect && chatReconnectConfig.reconnectId) {
       // Validate reconnect id if any
@@ -227,8 +257,9 @@ function WebChat(props: WebChatProps) {
       chatSDK?.onTypingEvent(onTypingEvent);
       chatSDK?.onAgentEndSession(onAgentEndSession);
 
-      let chatAdapter: any = await chatSDK?.createChatAdapter();
-      chatAdapter = createShimAdapter(chatAdapter);
+      // let chatAdapter: any = await chatSDK?.createChatAdapter();
+      let chatAdapter: any = await chatSDK?.createChatAdapter(chatAdapterConfig);
+      chatAdapter = await DirectChat.createChatAdapter(chatAdapter);
 
       setChatAdapter(chatAdapter);
       dispatch({type: ActionType.SET_LOADING, payload: false});
@@ -321,7 +352,9 @@ function WebChat(props: WebChatProps) {
         chatSDK?.onTypingEvent(onTypingEvent);
         chatSDK?.onAgentEndSession(onAgentEndSession);
 
-        const chatAdapter = await chatSDK?.createChatAdapter();
+        // let chatAdapter: any = await chatSDK?.createChatAdapter();
+        let chatAdapter: any = await chatSDK?.createChatAdapter(chatAdapterConfig);
+        chatAdapter = await DirectChat.createChatAdapter(chatAdapter);
 
         setChatAdapter(chatAdapter);
         dispatch({type: ActionType.SET_LOADING, payload: false});
@@ -367,14 +400,15 @@ function WebChat(props: WebChatProps) {
           }
           {
             !state.isLoading && state.hasChatStarted && chatAdapter && webChatStore && activityMiddleware && typingIndicatorMiddleware && <ReactWebChat
-              activityMiddleware={activityMiddleware}
-              avatarMiddleware={avatarMiddleware}
-              activityStatusMiddleware={activityStatusMiddleware}
-              typingIndicatorMiddleware={typingIndicatorMiddleware}
-              attachmentMiddleware={attachmentMiddleware}
-              userID="teamsvisitor"
+              // activityMiddleware={activityMiddleware}
+              // avatarMiddleware={avatarMiddleware}
+              // activityStatusMiddleware={activityStatusMiddleware}
+              // typingIndicatorMiddleware={typingIndicatorMiddleware}
+              // attachmentMiddleware={attachmentMiddleware}
+              // userID="teamsvisitor"
+              toastMiddleware={toastMiddleware}
               directLine={chatAdapter}
-              sendTypingIndicator={true}
+              // sendTypingIndicator={true}
               store={webChatStore}
               styleOptions={styleOptions}
             />
