@@ -196,6 +196,11 @@ function WebChat() {
     if (liveChatContext || !preChatSurvey || chatReconnectConfig.reconnectId) {
       dispatch({type: ActionType.SET_LOADING, payload: true});
 
+      // Auth Chat
+      if ((window as any).getAuthToken) {
+        await (chatSDK as any).setAuthTokenProvider((window as any).getAuthToken);
+      }
+
       try {
         await chatSDK?.startChat(optionalParams);
       } catch (error: any) {
@@ -230,7 +235,7 @@ function WebChat() {
   const endChat = useCallback(async () => {
     console.log('[endChat]');
     await chatSDK?.endChat();
-    chatAdapter.end && chatAdapter.end();
+    chatAdapter?.end && chatAdapter?.end();
 
     // Clean up
     (VoiceVideoCallingSDK as any)?.close();
