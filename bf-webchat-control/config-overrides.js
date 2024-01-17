@@ -1,5 +1,6 @@
 const webpack = require("webpack");
 
+// Fix for https://github.com/axios/axios/issues/5372
 function getFileLoaderRule(rules) {
   for(const rule of rules) {
       if("oneOf" in rule) {
@@ -40,6 +41,6 @@ module.exports = function override(config) {
       throw new Error("File loader not found");
   }
   fileLoaderRule.exclude.push(/\.cjs$/);
-  
+
   return config;
 };
