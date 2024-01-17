@@ -1,16 +1,22 @@
 const webpack = require("webpack");
 
+function getFileLoaderRule(rules) {
+  for(const rule of rules) {
+      if("oneOf" in rule) {
+          const found = getFileLoaderRule(rule.oneOf);
+          if(found) {
+              return found;
+          }
+      } else if(rule.test === undefined && rule.type === 'asset/resource') {
+          return rule;
+      }
+  }
+}
+
 module.exports = function override(config) {
   const fallback = config.resolve.fallback || {};
   Object.assign(fallback, {
     crypto: false, // require.resolve("crypto-browserify") can be polyfilled here if needed
-    stream: false, // require.resolve("stream-browserify") can be polyfilled here if needed
-    assert: false, // require.resolve("assert") can be polyfilled here if needed
-    http: false, // require.resolve("stream-http") can be polyfilled here if needed
-    https: false, // require.resolve("https-browserify") can be polyfilled here if needed
-    os: false, // require.resolve("os-browserify") can be polyfilled here if needed
-    url: false, // require.resolve("url") can be polyfilled here if needed
-    zlib: false, // require.resolve("browserify-zlib") can be polyfilled here if needed
   });
   config.resolve.fallback = fallback;
   config.plugins = (config.plugins || []).concat([
@@ -28,5 +34,12 @@ module.exports = function override(config) {
       fullySpecified: false,
     },
   });
+
+  const fileLoaderRule = getFileLoaderRule(config.module.rules);
+  if(!fileLoaderRule) {
+      throw new Error("File loader not found");
+  }
+  fileLoaderRule.exclude.push(/\.cjs$/);
+  
   return config;
 };
