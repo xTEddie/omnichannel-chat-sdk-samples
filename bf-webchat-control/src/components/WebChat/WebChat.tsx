@@ -220,10 +220,8 @@ function WebChat() {
       setChatAdapter(chatAdapter);
       dispatch({type: ActionType.SET_LOADING, payload: false});
 
-      if ((chatSDK as any)?.getVoiceVideoCalling) {
-        const chatToken: any = await chatSDK?.getChatToken();
-        setChatToken(chatToken);
-      }
+      const chatToken: any = await chatSDK?.getChatToken();
+      setChatToken(chatToken);
     }
   }, [chatSDK, state, dispatch, onAgentEndSession, onNewMessage, onTypingEvent, liveChatContext, preChatSurvey]);
 
@@ -313,10 +311,8 @@ function WebChat() {
         setChatAdapter(chatAdapter);
         dispatch({type: ActionType.SET_LOADING, payload: false});
 
-        if ((chatSDK as any)?.getVoiceVideoCalling) {
-          const chatToken: any = await chatSDK?.getChatToken();
-          setChatToken(chatToken);
-        }
+        const chatToken: any = await chatSDK?.getChatToken();
+        setChatToken(chatToken);
     }
 
     const renderedCard = adaptiveCard.render(); // Renders as HTML element
@@ -353,13 +349,13 @@ function WebChat() {
             />
           }
           {
-            !state.isLoading && state.hasChatStarted && chatAdapter && webChatStore && activityMiddleware && typingIndicatorMiddleware && <ReactWebChat
+            !state.isLoading && state.hasChatStarted && chatToken && chatAdapter && webChatStore && activityMiddleware && typingIndicatorMiddleware && <ReactWebChat
               activityMiddleware={activityMiddleware}
               avatarMiddleware={avatarMiddleware}
               activityStatusMiddleware={activityStatusMiddleware}
               typingIndicatorMiddleware={typingIndicatorMiddleware}
               attachmentMiddleware={attachmentMiddleware}
-              userID="teamsvisitor"
+              userID={(chatToken as any).visitorId || "teamsvisitor"}
               directLine={chatAdapter}
               sendTypingIndicator={true}
               store={webChatStore}
